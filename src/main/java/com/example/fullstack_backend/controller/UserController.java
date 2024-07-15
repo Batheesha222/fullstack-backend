@@ -1,5 +1,6 @@
 package com.example.fullstack_backend.controller;
 
+import com.example.fullstack_backend.exception.UserNotFoundException;
 import com.example.fullstack_backend.model.User;
 import com.example.fullstack_backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,5 +23,32 @@ public class UserController {
     List<User> getAllUsers(){
         return userRepository.findAll();
     }
+
+    @GetMapping("/user/{id}")
+    User getUserById(@PathVariable long id){
+        return userRepository.findById(id)
+                .orElseThrow(()->new UserNotFoundException(id));
+    }
+    @PutMapping("/user/{id}")
+    User updateUser(@RequestBody User newUser,@PathVariable long id){
+        return userRepository.findById(id)
+                .map(user -> {
+                    user.setEmail(newUser.getEmail());
+                    user.setName(newUser.getName());
+                    user.setUsername(newUser.getUsername());
+                    return userRepository.save(user);
+                }).orElseThrow(()->new UserNotFoundException(id));
+    }
+
+    @DeleteMapping("/user/{id}")
+    String deleteUser(@PathVariable long id){
+        if(!userRepository.existsById(id)){
+            throw new UserNotFoundException(id);
+        }
+        userRepository.deleteById(id);
+        return "User with id "+id+" has been deleted successfully";
+    }
+
+
 
 }
